@@ -1,0 +1,6 @@
+{
+    "mongo_uri": "mongodb://root:rootpassword@0.0.0.0:27017",
+    "base_page_id": "2137d1dc534b4e66b92c17c8f8d277cd",
+    "notion_token": "secret_sUSp4QpPDl36tfbZzFQwEyqCOSrzirqWB13aFKepgps",
+    "base_url": "http://0.0.0.0:8000"
+}
