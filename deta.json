@@ -33,6 +33,5 @@
             "value": "",
             "required": true
         }
-    ],
-    "cron": "deta cron set 1 minute"
+    ]
 }
