@@ -34,5 +34,5 @@
             "required": true
         }
     ],
-    "cron": "deta cron set '1 minute'"
+    "cron": "deta cron set "1 minute""
 }
