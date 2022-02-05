@@ -1,3 +1,5 @@
+from CommerceApi.config import Config
+
 order_content_block = {
     "children": [
         {
@@ -169,3 +171,32 @@ example_product_page = {
         },
     ]
 }
+
+def image_manager_content_block(uuid):
+    return {
+        "children": [
+            {
+                "object": "block",
+                "type": "heading_2",
+                "heading_2": {
+                    "text": [
+                        {
+                            "type": "text",
+                            "text": {"content": "Upload & Manage Product Images"},
+                            "annotations": {"underline": True},
+                        }
+                    ]
+                },
+            },
+            {
+                "object": "block",
+                "type": "embed",
+                "embed": { "url": f"{Config.base_url}/manage_image/load/{uuid}"},
+            },
+            {
+                "object": "block",
+                "type": "embed",
+                "embed": { "url": f"{Config.base_url}/manage_image/show/{uuid}"},
+            },
+        ]
+    }

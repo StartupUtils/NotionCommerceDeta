@@ -35,6 +35,8 @@ class ProductProperties(BaseModel):
     selling_section: list = []
     more_info_section: list = []
     page_results: list = []
+    product_id: str = None
+    price_id: str = None
 
     @property
     def title(self):
@@ -74,6 +76,10 @@ class ProductProperties(BaseModel):
         key = item["type"]
         return item.get(key)
 
+    def add_stripe_info(self, product_id, price_id):
+        self.product_id = product_id
+        self.price_id = price_id
+
     def prep_for_insert(self):
         return {
             "key": self.id,
@@ -85,6 +91,8 @@ class ProductProperties(BaseModel):
             "images": self.images,
             "selling_section": self.selling_section,
             "more_info_section": self.more_info_section,
+            "product_id": self.product_id,
+            "price_id": self.price_id
         }
 
 

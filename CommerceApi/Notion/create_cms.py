@@ -2,6 +2,7 @@ from CommerceApi.Notion import content, orders, products
 from CommerceApi.Notion.manager import NotionClient
 from CommerceApi.config import Config
 from CommerceApi.utils.database import DetaBase
+from CommerceApi.utils.access_key import AccessKey
 import time
 
 
@@ -24,6 +25,7 @@ class CMSBuilder:
         self.build_queue = []
         self.TABLE = "component_config"
         self.parent = {"type": "page_id", "page_id": self.base_page_id}
+        self.keys = None
 
     async def maybe_create_cms(self) -> None:
         built = await self.cms_already_built()
@@ -45,6 +47,7 @@ class CMSBuilder:
         self.create_order_table()
         self.create_product_block()
         self.create_product_table()
+        self.create_image_manager()
         for command in self.build_queue:
             time.sleep(0.3)
             await command.execute()
@@ -70,6 +73,24 @@ class CMSBuilder:
         method = NotionClient.create_database
         build_step = self._add_build_step(method, data)
         build_step.callback = self.handle_product_callback
+
+    def create_image_manager(self):
+        access = AccessKey()
+        keys = access.create_keys()
+        self.keys = keys
+        data = content.image_manager_content_block(keys['current_key'])
+        method = NotionClient.append_block_children
+        build_step = self._add_build_step(method, self.base_page_id, data)
+        build_step.callback = self.handle_test
+
+    async def handle_test(self, result):
+        results = result.json()['results']
+        image_upload_id = results[1].get("id")
+        display_id = results[2].get("id")
+        keys = self.keys
+        keys["upload_id"] = image_upload_id
+        keys["display_id"] = display_id
+        await self.db_client.insert(keys)
 
     def _add_build_step(self, method, *args):
         step = BuildStep(method, *args)

@@ -3,8 +3,10 @@ from CommerceApi.config import Config
 from fastapi.encoders import jsonable_encoder
 
 
-class DetaBase:
+class DETA:
     CLIENT = Deta(Config.deta_key)
+
+class DetaBase(DETA):
 
     def __init__(self, table):
         self.DB = self.CLIENT.AsyncBase(table)
@@ -31,3 +33,6 @@ class DetaBase:
 
     async def update(self, query: dict, key: str):
         return await self.DB.update(query, key)
+
+    async def put(self, query: dict):
+        return await self.DB.put(query)

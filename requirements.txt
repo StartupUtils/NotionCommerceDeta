@@ -2,3 +2,5 @@ fastapi
 deta[async]==1.1.0a1
 requests
 Jinja2
+python-multipart
+python-decouple
