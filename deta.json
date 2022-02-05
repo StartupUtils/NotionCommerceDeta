@@ -1,0 +1,38 @@
+{
+    "name": "Ecom Notion",
+    "description": "your app description",
+    "runtime": "micro's runtime",
+    "env": [
+        {
+            "key": "notion_page_id",
+            "description": "Notion page id",
+            "value": "",
+            "required": true
+        },
+        {
+            "key": "notion_token",
+            "description": "Notion API Token",
+            "value": "",
+            "required": true
+        },
+        {
+            "key": "base_url",
+            "description": "Your Site's Base URL",
+            "value": "",
+            "required": true
+        },
+        {
+            "key": "deta_key",
+            "description": "Deta Key",
+            "value": "",
+            "required": true
+        },
+        {
+            "key": "stripe_key",
+            "description": "Stripe API Key",
+            "value": "",
+            "required": true
+        }
+    ],
+    "cron": "deta cron set minute 1"
+}
