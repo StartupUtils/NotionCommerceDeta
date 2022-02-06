@@ -4,7 +4,10 @@ from fastapi.encoders import jsonable_encoder
 
 
 class DETA:
-    CLIENT = Deta(Config.deta_key)
+    if Config.deta_key:
+        CLIENT = Deta(Config.deta_key)
+    else:
+        CLIENT = Deta(Config.deta_key)
 
 class DetaBase(DETA):
 
