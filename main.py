@@ -52,7 +52,7 @@ except:
 
 config_client = DetaBase("notion_config")
 
-origins = ["*"]
+origins = ["http://192.168.0.104:3000"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -67,6 +67,11 @@ app.include_router(cdn.router)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+@app.get("/")
+async def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
 
 @app.get("/product/{id}")
 async def serve_spa(request: Request):

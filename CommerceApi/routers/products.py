@@ -188,7 +188,6 @@ async def checkout(order_key: str):
             if product.display:
                 listings.append({"price": product.price_id, "quantity": item.quant})
 
-        YOUR_DOMAIN = "https://matthewlsession.com"
         checkout_session = stripe.create_link(listings)
         return {"url": checkout_session.url}
     except Exception as e:

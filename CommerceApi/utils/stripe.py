@@ -63,15 +63,14 @@ class StripeManager:
         return int(price * 100)
 
     def create_link(self, listings):
-        YOUR_DOMAIN = "https://matthewlsession.com"
         checkout_session = stripe.checkout.Session.create(
             shipping_address_collection={
             'allowed_countries': ['US'],
             },
             line_items=listings,
             mode='payment',
-            success_url=YOUR_DOMAIN + '/success.html',
-            cancel_url=YOUR_DOMAIN + '/cancel.html',
+            success_url=Config.base_url + '/success',
+            cancel_url=Config.base_url + '/cart',
         )
         return checkout_session
         

@@ -33,8 +33,11 @@ def upload_img(request: Request, file: UploadFile = File(...)):
 
 @router.get("/fetch/logo")
 def get_logo_img():
-    res = drive.get("logo.png")
-    return StreamingResponse(res.iter_chunks(1024), media_type="image/png")
+    try:
+        res = drive.get("logo.png")
+        return StreamingResponse(res.iter_chunks(1024), media_type="image/png")
+    except:
+        return JSONResponse(status_code=404, content={"info": "No logo found"})
 
 @router.get("/fetch/{name}")
 def download_img(name: str):
