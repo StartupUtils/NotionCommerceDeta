@@ -25,7 +25,7 @@
             "key": "deta_key",
             "description": "Deta Key",
             "value": "",
-            "required": true
+            "required": false
         },
         {
             "key": "stripe_key",
