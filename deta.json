@@ -1,7 +1,7 @@
 {
     "name": "Ecom Notion",
     "description": "your app description",
-    "runtime": "python3.8",
+    "runtime": "python3.9",
     "env": [
         {
             "key": "notion_page_id",
