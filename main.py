@@ -37,18 +37,18 @@ except:
     from fastapi_utils.tasks import repeat_every
     app = FastAPI()
 
-    # @app.on_event("startup")
-    # async def startup_event():
-    #     print("starting")
-    #     build = CMSBuilder()
-    #     await build.maybe_create_cms()
+    @app.on_event("startup")
+    async def startup_event():
+        print("starting")
+        build = CMSBuilder()
+        await build.maybe_create_cms()
 
-    # @app.on_event("startup")
-    # @repeat_every(seconds=5, wait_first=True)
-    # async def populate_products():
-    #     print("Population products")
-    #     await update_products()
-    #     await swap_access_keys()
+    @app.on_event("startup")
+    @repeat_every(seconds=30, wait_first=True)
+    async def populate_products():
+        print("Population products")
+        await update_products()
+        await swap_access_keys()
 
 config_client = DetaBase("notion_config")
 
@@ -89,4 +89,21 @@ async def load_image(idd: str, request: Request):
         return templates.TemplateResponse("index.html", {"request": request})
     return "error"
 
+@app.get("/manage_image/show/{idd}")
+async def show_image(idd: str, request: Request):
+    data = await config_client.get("access_keys")
+    current = data.get("current_key")
+    last = data.get("last_key")
+    if idd == current or idd == last:
+        return templates.TemplateResponse("index.html", {"request": request})
+    return "error"
+
+@app.post("/manage_image/load/{idd}")
+async def load_image_post(idd: str, request: Request):
+    data = await config_client.get("access_keys")
+    current = data.get("current_key")
+    last = data.get("last_key")
+    if idd == current or idd == last:
+        return templates.TemplateResponse("index.html", {"request": request})
+    return "error"
 

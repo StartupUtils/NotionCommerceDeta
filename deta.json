@@ -1,7 +1,7 @@
 {
     "name": "Ecom Notion",
     "description": "your app description",
-    "runtime": "micro's runtime",
+    "runtime": "python3.8",
     "env": [
         {
             "key": "notion_page_id",
@@ -33,5 +33,6 @@
             "value": "",
             "required": true
         }
-    ]
+    ],
+    "cron": "1 minute"
 }

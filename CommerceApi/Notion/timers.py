@@ -137,8 +137,8 @@ async def swap_access_keys():
     display_id = keys.get("display_id")
     await config_client.put(keys)
     current_product = keys.get("current_key")
-    NotionClient.update_block(upload_id, access_keys.image_upload_id)
-    NotionClient.update_block(display_id, access_keys.image_display_obj)
+    NotionClient.update_block(upload_id, access.image_upload_obj)
+    NotionClient.update_block(display_id, access.image_display_obj)
 
 
 
