@@ -22,12 +22,6 @@
             "required": true
         },
         {
-            "key": "deta_key",
-            "description": "Deta Key",
-            "value": "",
-            "required": false
-        },
-        {
             "key": "stripe_key",
             "description": "Stripe API Key",
             "value": "",
