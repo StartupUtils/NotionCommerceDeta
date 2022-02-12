@@ -25,47 +25,35 @@ def orders_schema(parent: dict):
             "address": {"rich_text": {}},
             "email": {"email": {}},
             "phone": {"phone_number": {}},
-            "order date": {"date": {}},
+            "order date": {"created_time": {}},
             "order price": {"number": {"format": "dollar"}},
+            "receipt": {"url": {}},
         },
     }
 
 
 def add_order_schema(
-    parent,
+    parent_id,
     title,
     order_id,
     address,
     price,
-    email=None,
-    phone=None,
-    created_date=None,
-    ordered_products=[],
+    email,
+    receipt,
 ):
-    children = [
-        {
-            "object": "block",
-            "type": "heading_2",
-            "heading_2": {
-                "text": [{"type": "text", "text": {"content": "Order Overview"}}]
-            },
-        }
-    ]
-    for product_title, sdk, href in ordered_products:
-        children.append(_create_order_check(product_title, sdk, href))
     return {
-        "parent": parent,
+        "parent": {"type": "database_id", "database_id": parent_id},
         "properties": {
-            "order details": {"title": [{"text": {"content": title}}]},
+            "order details": {
+                "title": [{"type": "text", "text": {"content": title, "link": None}}]
+            },
+            "email": {"email": email},
+            "status": {"select": {"name": "new"}},
             "order id": {"rich_text": [{"text": {"content": order_id}}]},
             "address": {"rich_text": [{"text": {"content": address}}]},
-            "status": {"select": {"name": "new"}},
-            "email": {"email": email},
-            "phone": {"phone_number": phone},
-            "order date": {"date": {"start": created_date}},
+            "receipt": {"url": receipt},
+            "order price": {"number": price},
         },
-        "children": children,
-        "order price": {"number": price},
     }
 
 

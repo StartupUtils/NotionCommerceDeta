@@ -2,8 +2,8 @@ from fastapi import Request, FastAPI
 from CommerceApi import Counter
 from CommerceApi.utils.database import DetaBase
 from CommerceApi.Notion.create_cms import CMSBuilder
-from CommerceApi.Notion.manager import  NotionClient
-from CommerceApi.Notion.timers import update_products, swap_access_keys
+from CommerceApi.Notion.manager import NotionClient
+from CommerceApi.Notion.timers import update_products, swap_access_keys, sync_orders
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -13,28 +13,29 @@ import asyncio
 import os
 import json
 
-logging.error('tying to run')
-
 
 try:
     from deta import Deta, App
+
     app = App(FastAPI())
 
     @app.lib.cron()
     def cron_job(event):
         print("loop")
         loop = asyncio.get_event_loop()
-        print('cms')
+        print("cms")
         build = CMSBuilder()
-        print('test build cms')
+        print("test build cms")
         loop.run_until_complete(build.maybe_create_cms())
-        print('product update')
+        print("product update")
         loop.run_until_complete(update_products())
         print("updated image load logic")
         loop.run_until_complete(swap_access_keys())
 
+
 except:
     from fastapi_utils.tasks import repeat_every
+
     app = FastAPI()
 
     @app.on_event("startup")
@@ -44,15 +45,19 @@ except:
         await build.maybe_create_cms()
 
     @app.on_event("startup")
-    @repeat_every(seconds=30, wait_first=True)
+    @repeat_every(seconds=5, wait_first=True)
     async def populate_products():
         print("Population products")
-        await update_products()
-        await swap_access_keys()
+        try:
+            await update_products()
+            await swap_access_keys()
+            await sync_orders()
+        except Exception as e:
+            print(e)
 
 config_client = DetaBase("notion_config")
 
-origins = ["http://192.168.0.104:3000"]
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -68,6 +73,7 @@ app.include_router(cdn.router)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+
 @app.get("/")
 async def home(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -77,13 +83,21 @@ async def home(request: Request):
 async def serve_spa(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+
 @app.get("/cart")
 async def cart(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
+
+@app.get("/success")
+async def success(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
 @app.get("/products")
 async def products(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
 
 @app.get("/manage_image/load/{idd}")
 async def load_image(idd: str, request: Request):
@@ -94,6 +108,7 @@ async def load_image(idd: str, request: Request):
         return templates.TemplateResponse("index.html", {"request": request})
     return "error"
 
+
 @app.get("/manage_image/show/{idd}")
 async def show_image(idd: str, request: Request):
     data = await config_client.get("access_keys")
@@ -103,6 +118,7 @@ async def show_image(idd: str, request: Request):
         return templates.TemplateResponse("index.html", {"request": request})
     return "error"
 
+
 @app.post("/manage_image/load/{idd}")
 async def load_image_post(idd: str, request: Request):
     data = await config_client.get("access_keys")
@@ -111,4 +127,3 @@ async def load_image_post(idd: str, request: Request):
     if idd == current or idd == last:
         return templates.TemplateResponse("index.html", {"request": request})
     return "error"
-

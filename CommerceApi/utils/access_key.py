@@ -12,21 +12,23 @@ class AccessKey:
             "key": "access_keys",
             "updated": self.epoch_now,
             "current_key": str(uuid4()),
-            "last_key": str(uuid4())
+            "last_key": str(uuid4()),
         }
-    
+
     def swap_keys(self, key: dict):
         key["last_key"] = key["current_key"]
-        key["current_key"] = str(uuid())
+        key["current_key"] = str(uuid4())
         key["updated"] = self.epoch_now
         return key
 
     def maybe_swap(self, key: dict):
+        swapped = False
         if (self.epoch_now - key["updated"]) > self.eight_hours:
             key = self.swap_keys(key)
+            swapped = True
         self.keys = key
-        return key
-    
+        return key, swapped
+
     @property
     def epoch_now(self):
         return int(datetime.now(tz=timezone.utc).timestamp() * 1000)
@@ -36,16 +38,8 @@ class AccessKey:
 
     @property
     def image_upload_obj(self):
-        return {
-            "embed": {"url": self.create_url("load")}
-        }
+        return {"embed": {"url": self.create_url("load")}}
 
     @property
     def image_display_obj(self):
-        return {
-            "embed": {"url": self.create_url("show")}
-        }
-
-
-
-
+        return {"embed": {"url": self.create_url("show")}}

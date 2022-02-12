@@ -172,6 +172,7 @@ example_product_page = {
     ]
 }
 
+
 def image_manager_content_block(uuid):
     return {
         "children": [
@@ -191,12 +192,12 @@ def image_manager_content_block(uuid):
             {
                 "object": "block",
                 "type": "embed",
-                "embed": { "url": f"{Config.base_url}/manage_image/load/{uuid}"},
+                "embed": {"url": f"{Config.base_url}/manage_image/load/{uuid}"},
             },
             {
                 "object": "block",
                 "type": "embed",
-                "embed": { "url": f"{Config.base_url}/manage_image/show/{uuid}"},
+                "embed": {"url": f"{Config.base_url}/manage_image/show/{uuid}"},
             },
         ]
     }

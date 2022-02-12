@@ -2,10 +2,12 @@ from pydantic import BaseModel, Field
 from typing import List
 from uuid import uuid4, UUID
 
+
 class CartItem(BaseModel):
     id: str
     quant: int
     message: str = None
+
 
 class Product(BaseModel):
     key: str
@@ -33,14 +35,17 @@ class Product(BaseModel):
             "quant": item.quant,
             "id": item.id,
             "message": item.message,
-            "title": self.title
+            "title": self.title,
         }
+
 
 class Cart(BaseModel):
     data: List[CartItem]
 
+
 def create_uuid():
     return str(uuid4())
+
 
 class CuratedCart(BaseModel):
     data: List[CartItem] = Field(default_factory=list)
@@ -65,12 +70,13 @@ class CuratedCart(BaseModel):
         for item in self.data:
             if item.id == item_id:
                 item.quant += 1
-                
+
     def neg(self, item_id: str):
         for item in self.data:
             if item.id == item_id:
                 if item.quant > 1:
                     item.quant -= 1
+
 
 class ModCommand(BaseModel):
     command: str

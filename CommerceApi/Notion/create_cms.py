@@ -2,6 +2,7 @@ from CommerceApi.Notion import content, orders, products
 from CommerceApi.Notion.manager import NotionClient
 from CommerceApi.config import Config
 from CommerceApi.utils.database import DetaBase
+from CommerceApi.utils.stripe import StripeManager
 from CommerceApi.utils.access_key import AccessKey
 import time
 
@@ -18,6 +19,12 @@ class BuildStep:
             await self.callback(result)
 
 
+async def create_webhook():
+    stripe = StripeManager(Config.stripe_key)
+    key = stripe.create_webhook()
+    return key
+
+
 class CMSBuilder:
     def __init__(self):
         self.db_client = DetaBase("notion_config")
@@ -26,10 +33,11 @@ class CMSBuilder:
         self.TABLE = "component_config"
         self.parent = {"type": "page_id", "page_id": self.base_page_id}
         self.keys = None
+        self.webhook_secret = None
 
     async def maybe_create_cms(self) -> None:
         built = await self.cms_already_built()
-        print('built res', built)
+        print("built res", built)
         if built is False:
             await self.build()
         else:
@@ -37,12 +45,13 @@ class CMSBuilder:
 
     async def cms_already_built(self) -> bool:
         result = await self.db_client.find_one({"parent_id": self.base_page_id})
-        print('is built', result)
+        print("is built", result)
         if result is None:
             return False
         return True
 
     async def build(self):
+        await self.create_webhook()
         self.create_order_block()
         self.create_order_table()
         self.create_product_block()
@@ -78,18 +87,23 @@ class CMSBuilder:
         access = AccessKey()
         keys = access.create_keys()
         self.keys = keys
-        data = content.image_manager_content_block(keys['current_key'])
+        data = content.image_manager_content_block(keys["current_key"])
         method = NotionClient.append_block_children
         build_step = self._add_build_step(method, self.base_page_id, data)
         build_step.callback = self.handle_test
 
+    async def create_webhook(self):
+        key = await create_webhook()
+        self.webhook_secret = key
+
     async def handle_test(self, result):
-        results = result.json()['results']
+        results = result.json()["results"]
         image_upload_id = results[1].get("id")
         display_id = results[2].get("id")
         keys = self.keys
         keys["upload_id"] = image_upload_id
         keys["display_id"] = display_id
+        keys["webhook_secret"] = self.webhook_secret
         await self.db_client.insert(keys)
 
     def _add_build_step(self, method, *args):

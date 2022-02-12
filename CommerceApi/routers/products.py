@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header, Request
 from fastapi.responses import JSONResponse
 from CommerceApi.utils.database import DetaBase as DB
 from CommerceApi.models.store import Cart, CuratedCart, CartItem, Product, ModCommand
-from CommerceApi.utils.stripe import StripeManager
+from CommerceApi.utils.stripe import StripeManager, StripePayment
 from CommerceApi.config import Config
 
 stripe = StripeManager(Config.stripe_key)
+stripe_payment = StripePayment(DB)
 
 router = APIRouter(
     prefix="/api",
@@ -15,6 +16,7 @@ router = APIRouter(
 
 product_client = DB("products")
 curated_cart = DB("curated_cart")
+
 
 @router.get("/product/{target}", status_code=201)
 async def get_product(target: str):
@@ -26,13 +28,32 @@ async def get_product(target: str):
         if product is None:
             return JSONResponse(
                 status_code=400,
-                content={"message": f"No product with id {product_id}.", "ok": False, "issue_type": "not_found"},
+                content={
+                    "message": f"No product with id {product_id}.",
+                    "ok": False,
+                    "issue_type": "not_found",
+                },
             )
-        
+
         if product.get("display") == True:
             return JSONResponse(status_code=200, content=product)
-        return JSONResponse(status_code=400, content={"message": f"Product is not enabeld for display", "ok": False, "issue_type": "not_displayed"})
-    return JSONResponse(status_code=400, content={"message": f"Could not parse {target}", "ok": False, "issue_type": "id_parse"})
+        return JSONResponse(
+            status_code=400,
+            content={
+                "message": f"Product is not enabeld for display",
+                "ok": False,
+                "issue_type": "not_displayed",
+            },
+        )
+    return JSONResponse(
+        status_code=400,
+        content={
+            "message": f"Could not parse {target}",
+            "ok": False,
+            "issue_type": "id_parse",
+        },
+    )
+
 
 @router.post("/cart", status_code=200)
 async def cart(cart: Cart):
@@ -50,7 +71,7 @@ async def cart(cart: Cart):
             "id": item.id,
         }
         if display and price and item.quant > 0:
-            total += (price * item.quant)
+            total += price * item.quant
             data["price"] = price
             data["quant"] = item.quant
             image = None
@@ -59,11 +80,16 @@ async def cart(cart: Cart):
             data["image"] = image
             data["title"] = title
             listings.append(data)
-    
+
     return {
-        "pricing": [{"subject": "Subtotal", "price": f"${round(total, 2)}"}, {"subject": "Shipping", "price": "$5"},{"subject": "Tax", "price": None}],
-        "listings": listings
+        "pricing": [
+            {"subject": "Subtotal", "price": f"${round(total, 2)}"},
+            {"subject": "Shipping", "price": "$5"},
+            {"subject": "Tax", "price": None},
+        ],
+        "listings": listings,
     }
+
 
 @router.post("/createorder", status_code=200)
 async def createorder(cart: CuratedCart):
@@ -74,6 +100,7 @@ async def createorder(cart: CuratedCart):
     except Exception as e:
         return JSONResponse(status_code=400, content={"message": str(e), "ok": False})
 
+
 @router.get("/removeitem/{order_key}/{item_key}", status_code=200)
 async def removeitem(order_key: str, item_key: str):
     try:
@@ -84,6 +111,7 @@ async def removeitem(order_key: str, item_key: str):
         return order_obj.dict()
     except Exception as e:
         return JSONResponse(status_code=400, content={"message": str(e), "ok": False})
+
 
 @router.post("/updateorder/{order_key}", status_code=200)
 async def updateorder(order_key: str, item: CartItem):
@@ -96,6 +124,7 @@ async def updateorder(order_key: str, item: CartItem):
         return updated_data
     except Exception as e:
         return JSONResponse(status_code=400, content={"message": str(e), "ok": False})
+
 
 @router.get("/products", status_code=200)
 async def allproducts():
@@ -106,16 +135,19 @@ async def allproducts():
             image = None
             if len(data.get("images")) > 0:
                 image = data.get("images")[0]
-            pack = {
-                "image": image,
-                "price": data.get("price"),
-                "key": data.get("key"),
-                "title": data.get("title")
-            }
-            res.append(pack)
+            price = data.get("price")
+            if price:
+                pack = {
+                    "image": image,
+                    "price": f"${price}",
+                    "key": data.get("key"),
+                    "title": data.get("title"),
+                }
+                res.append(pack)
         return res
     except Exception as e:
         return JSONResponse(status_code=400, content={"message": str(e), "ok": False})
+
 
 @router.get("/removeitem/{order_key}/{item_key}", status_code=200)
 async def removeitem(order_key: str, item_key: str):
@@ -128,6 +160,7 @@ async def removeitem(order_key: str, item_key: str):
     except Exception as e:
         return JSONResponse(status_code=400, content={"message": str(e), "ok": False})
 
+
 @router.post("/updateorder/{order_key}", status_code=200)
 async def updateorder(order_key: str, item: CartItem):
     try:
@@ -139,6 +172,7 @@ async def updateorder(order_key: str, item: CartItem):
         return updated_data
     except Exception as e:
         return JSONResponse(status_code=400, content={"message": str(e), "ok": False})
+
 
 @router.get("/customcart/{order_key}", status_code=200)
 async def getorder(order_key: str):
@@ -157,24 +191,16 @@ async def getorder(order_key: str):
         si = "$"
         price = f"{si}%.2f" % round(subtotal, 2)
         res = order_obj.dict()
-        res['data'] = listings
+        res["data"] = listings
         res["pricing"] = [
-            {
-                "subject": "Subtotal",
-                "price": price
-            },
-            {
-                "subject": "Shipping",
-                "price": "$5.00"
-            },
-            {
-                "subject": "Tax",
-                "price": None
-            },
+            {"subject": "Subtotal", "price": price},
+            {"subject": "Shipping", "price": None},
+            {"subject": "Tax", "price": None},
         ]
         return res
     except Exception as e:
         return JSONResponse(status_code=400, content={"message": str(e), "ok": False})
+
 
 @router.get("/checkout/{order_key}", status_code=200)
 async def checkout(order_key: str):
@@ -193,6 +219,7 @@ async def checkout(order_key: str):
     except Exception as e:
         return JSONResponse(status_code=400, content={"message": str(e), "ok": False})
 
+
 @router.post("/modcart", status_code=200)
 async def modcart(command: ModCommand):
     try:
@@ -209,3 +236,16 @@ async def modcart(command: ModCommand):
         return data
     except Exception as e:
         return JSONResponse(status_code=400, content={"message": str(e), "ok": False})
+
+
+@router.post("/webhook", status_code=200)
+async def webhook(request: Request, stripe_signature: str = Header(str)):
+    webhook_secret = await stripe_payment.webhook_secret
+    data = await request.body()
+    try:
+        event = stripe.parse_event(data, stripe_signature, webhook_secret)
+
+    except Exception as e:
+        return JSONResponse(status_code=400, content={"error": str(e)})
+    await stripe_payment.upload(event)
+    return {"ok": True}

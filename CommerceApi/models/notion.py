@@ -92,7 +92,7 @@ class ProductProperties(BaseModel):
             "selling_section": self.selling_section,
             "more_info_section": self.more_info_section,
             "product_id": self.product_id,
-            "price_id": self.price_id
+            "price_id": self.price_id,
         }
 
 

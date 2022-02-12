@@ -1,5 +1,18 @@
-from fastapi import Request, FastAPI, File, UploadFile, APIRouter, Depends, HTTPException
-from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse, RedirectResponse
+from fastapi import (
+    Request,
+    FastAPI,
+    File,
+    UploadFile,
+    APIRouter,
+    Depends,
+    HTTPException,
+)
+from fastapi.responses import (
+    HTMLResponse,
+    StreamingResponse,
+    JSONResponse,
+    RedirectResponse,
+)
 from CommerceApi.utils.database import DETA
 from CommerceApi.config import Config
 from fastapi.templating import Jinja2Templates
@@ -29,7 +42,8 @@ def upload_img(request: Request, file: UploadFile = File(...)):
     name = file.filename
     f = file.file
     res = drive.put(name, f)
-    return RedirectResponse(request.headers.get('referer'))
+    return RedirectResponse(request.headers.get("referer"))
+
 
 @router.get("/fetch/logo")
 def get_logo_img():
@@ -39,10 +53,12 @@ def get_logo_img():
     except:
         return JSONResponse(status_code=404, content={"info": "No logo found"})
 
+
 @router.get("/fetch/{name}")
 def download_img(name: str):
     res = drive.get(name)
     return StreamingResponse(res.iter_chunks(1024), media_type="image/png")
+
 
 @router.get("/fetchall")
 def fetchall():

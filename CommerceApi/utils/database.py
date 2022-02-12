@@ -9,8 +9,8 @@ class DETA:
     else:
         CLIENT = Deta(Config.deta_key)
 
-class DetaBase(DETA):
 
+class DetaBase(DETA):
     def __init__(self, table):
         self.DB = self.CLIENT.AsyncBase(table)
 
@@ -25,8 +25,6 @@ class DetaBase(DETA):
 
     async def find_one(self, query):
         res = await self.DB.fetch(query)
-        print(res)
-        print(res.items)
         for data in res.items:
             return data
 
