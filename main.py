@@ -29,6 +29,8 @@ try:
         loop.run_until_complete(build.maybe_create_cms())
         print("product update")
         loop.run_until_complete(update_products())
+        print("Checking orders")
+        loop.run_until_complete(sync_orders())
         print("updated image load logic")
         loop.run_until_complete(swap_access_keys())
 
